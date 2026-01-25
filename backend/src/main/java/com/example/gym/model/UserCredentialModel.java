@@ -18,14 +18,14 @@ public class UserCredentialModel {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "foreign_id", nullable = false)
-    private Long foreignId;
-
     @Column(name = "user_type", nullable = false)
     private String userType; // "Member" or "Staff"
 
     @Column(nullable = false, unique = true)
     private String username;
+
+    @Column(nullable = false, unique = true)
+    private String email;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
