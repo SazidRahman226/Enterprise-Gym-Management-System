@@ -1,12 +1,13 @@
 package com.example.gym.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.math.BigDecimal;
-@Data
+import java.util.UUID;
+
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -14,14 +15,13 @@ import java.math.BigDecimal;
 @Table(name = "staff")
 public class StaffModel {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "staff_id")
-    private Long staffId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID staffId;
 
-    @Column(name = "first_name", nullable = false)
+    @Column(nullable = false)
     private String firstName;
 
-    @Column(name = "last_name", nullable = false)
+    @Column(nullable = false)
     private String lastName;
 
     @Column(nullable = false)
@@ -29,7 +29,6 @@ public class StaffModel {
 
     private BigDecimal salary;
 
-    @Column(name = "shift_details")
     private String shiftDetails;
 
     @OneToOne(mappedBy = "staff", cascade = CascadeType.ALL)

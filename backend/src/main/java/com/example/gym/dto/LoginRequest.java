@@ -1,9 +1,12 @@
 package com.example.gym.dto;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Setter
+@Getter
 public class LoginRequest {
-    private String usernameOrEmail;
+    private String email;
     private String password;
 }

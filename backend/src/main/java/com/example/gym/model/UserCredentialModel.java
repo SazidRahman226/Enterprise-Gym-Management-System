@@ -1,12 +1,13 @@
 package com.example.gym.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDateTime;
-@Data
+import java.util.UUID;
+
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -14,22 +15,23 @@ import java.time.LocalDateTime;
 @Table(name = "user_credentials")
 public class UserCredentialModel {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Long userId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID userId;
 
-    @Column(name = "user_type", nullable = false)
+    @Column(nullable = false)
     private String userType; // "Member" or "Staff"
 
     @Column(nullable = false, unique = true)
-    private String username;
+    private String userEmail;
 
-    @Column(nullable = false, unique = true)
-    private String email;
-
-    @Column(name = "password_hash", nullable = false)
+    @Column(nullable = false)
     private String passwordHash;
 
-    @Column(name = "last_login")
+    @Column
     private LocalDateTime lastLogin;
+
+    @PrePersist
+    public void setLastLogin() {
+        lastLogin = LocalDateTime.now();
+    }
 }

@@ -1,14 +1,14 @@
 package com.example.gym.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -18,14 +18,13 @@ import java.util.List;
 })
 public class MemberModel {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "member_id")
-    private Long memberId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID memberId;
 
-    @Column(name = "first_name", nullable = false)
+    @Column(nullable = false)
     private String firstName;
 
-    @Column(name = "last_name", nullable = false)
+    @Column(nullable = false)
     private String lastName;
 
     @Column(nullable = false, unique = true)
@@ -34,20 +33,19 @@ public class MemberModel {
     @Column(nullable = false)
     private String phone;
 
-    @Column(name = "emergency_contact")
     private String emergencyContact;
 
+    @Column(nullable = false)
     private LocalDate dob;
 
-    @Column(name = "current_status")
-    private String currentStatus; // Active, Expired, Banned
+    private String currentStatus; // Active, Expired, Banned, Pending
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SubscriptionModel> subscriptions;
 
-    @OneToMany(mappedBy = "member")
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
     private List<ClassBookingModel> bookings;
 
-    @OneToMany(mappedBy = "member")
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
     private List<AttendanceLogModel> attendanceLogs;
 }
