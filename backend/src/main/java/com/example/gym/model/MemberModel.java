@@ -33,12 +33,14 @@ public class MemberModel {
     @Column(nullable = false, unique = true)
     private String phone;
 
+    @Column(unique = true)
     private String emergencyContact;
 
     @Column(nullable = false)
     private LocalDate dob;
 
-    private String currentStatus; // Active, Expired, Banned, Pending
+    @Column(nullable = false)
+    private String currentStatus; // active, expired, banned, pending
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SubscriptionModel> subscriptions;

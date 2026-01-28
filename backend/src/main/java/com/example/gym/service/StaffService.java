@@ -1,13 +1,8 @@
 package com.example.gym.service;
 
 import com.example.gym.model.MemberModel;
-import com.example.gym.model.StaffModel;
-import com.example.gym.model.UserCredentialModel;
 import com.example.gym.repository.MemberRepository;
-import com.example.gym.repository.StaffRepository;
-import com.example.gym.repository.UserCredentialRepository;
-import com.example.gym.security.JwtUtil;
-import com.example.gym.security.ValidationUtil;
+import com.example.gym.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -32,15 +27,13 @@ public class StaffService {
 
     public ResponseEntity<?> getPendingRequest(String authHeader)
     {
-        System.out.println("pending...");
-        validationUtil.validateStaff(authHeader, "admin");
-        return ResponseEntity.ok(memberRepository.findPendingMembers("Pending"));
+        validationUtil.isStaffAdmin(authHeader);
+        return ResponseEntity.ok(memberRepository.findPendingMembers("pending"));
     }
 
     public ResponseEntity<?> alterMemberCurrentStatus(@PathVariable UUID uuid, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader, String currentStatus)
     {
-        validationUtil.validateStaff(authHeader, "admin");
-
+        validationUtil.isStaffAdmin(authHeader);
         MemberModel memberModel = memberRepository.findByMemberId(uuid)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
         String previousStatus = memberModel.getCurrentStatus();

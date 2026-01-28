@@ -19,7 +19,7 @@ public class UserCredentialModel {
     private UUID userId;
 
     @Column(nullable = false)
-    private String userType; // "Member" or "Staff"
+    private String userType; // "member" or "staff"
 
     @Column(nullable = false, unique = true)
     private String userEmail;

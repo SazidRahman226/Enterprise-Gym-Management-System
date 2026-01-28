@@ -7,6 +7,7 @@ import com.example.gym.model.UserCredentialModel;
 import com.example.gym.repository.MemberRepository;
 import com.example.gym.repository.UserCredentialRepository;
 import com.example.gym.security.JwtUtil;
+import com.example.gym.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ public class MemberService {
     private final UserCredentialRepository userCredentialRepository;
     private final JwtUtil jwtUtil;
     private final MemberRepository memberRepository;
+    private final ValidationUtil validationUtil;
 
     public ResponseEntity<?> register(@RequestBody RegisterRequest member) {
 
@@ -75,24 +77,14 @@ public class MemberService {
     public ResponseEntity<?> createUserDetails(@RequestBody UserDetailsRequest userDetailsRequest, String authHeader)
     {
 
-        String token = authHeader.substring(7);
-
-        if(!jwtUtil.validateToken(token)) {
-            throw new RuntimeException("Invalid token");
-        }
-
-        String userEmail = jwtUtil.extractUserEmail(token);
-
-
-        UserCredentialModel user = userCredentialRepository.findByUserEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+        String userEmail = validationUtil.extractUserEmailFromAuthHeader(authHeader);
 
         MemberModel member = MemberModel.builder()
                 .firstName(userDetailsRequest.getFirstName())
                 .lastName(userDetailsRequest.getLastName())
                 .dob(userDetailsRequest.getDob())
                 .phone(userDetailsRequest.getPhone())
-                .currentStatus("Pending")
+                .currentStatus("pending")
                 .email(userEmail)
                 .emergencyContact(userDetailsRequest.getEmergencyContact())
                 .build();
@@ -108,15 +100,7 @@ public class MemberService {
     public ResponseEntity<?> getUserdetails(String authHeader)
     {
 
-        String token = authHeader.substring(7);
-
-        if(!jwtUtil.validateToken(token)) {
-            throw new RuntimeException("Invalid token");
-        }
-        else
-            System.out.println("Token Valid!");
-
-        String userEmail = jwtUtil.extractUserEmail(token);
+        String userEmail = validationUtil.extractUserEmailFromAuthHeader(authHeader);
 
         MemberModel memberModel = memberRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User details not found"));

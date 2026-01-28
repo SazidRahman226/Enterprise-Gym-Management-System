@@ -28,7 +28,7 @@ public class StaffModel {
     private String email;
 
     @Column(nullable = false)
-    private String role; // Admin, FrontDesk, Manager
+    private String role; // admin, frontDesk, manager
 
     private BigDecimal salary;
 
