@@ -13,11 +13,12 @@ import java.util.List;
 import java.util.Optional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface MemberRepository extends JpaRepository<MemberModel, Long> {
     Optional<MemberModel> findByEmail(String email);
-
+    Optional<MemberModel> findByMemberId(UUID uuid);
     List<MemberModel> findByCurrentStatus(String status);
 
     // For "Churn Risk": Find active members with no attendance in X days
@@ -26,4 +27,7 @@ public interface MemberRepository extends JpaRepository<MemberModel, Long> {
             "AND m.memberId NOT IN " +
             "(SELECT a.member.memberId FROM AttendanceLogModel a WHERE a.checkInTime > :cutoffDate)")
     List<MemberModel> findChurnRiskMembers(@Param("cutoffDate") LocalDateTime cutoffDate);
+
+    @Query("SELECT m FROM MemberModel m WHERE m.currentStatus = :status")
+    List<MemberModel> findPendingMembers(@Param("status") String status);
 }

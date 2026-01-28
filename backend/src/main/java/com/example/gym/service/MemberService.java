@@ -33,10 +33,10 @@ public class MemberService {
         }
 
         String hashedPassword = BCrypt.hashpw(member.getPassword(),  BCrypt.gensalt());
-        new UserCredentialModel();
+
         UserCredentialModel user = UserCredentialModel.builder()
                 .userEmail(member.getEmail())
-                .userType("Member")
+                .userType("member")
                 .passwordHash(hashedPassword)
                 .build();
 
@@ -87,7 +87,6 @@ public class MemberService {
         UserCredentialModel user = userCredentialRepository.findByUserEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Invalid username or password"));
 
-        new MemberModel();
         MemberModel member = MemberModel.builder()
                 .firstName(userDetailsRequest.getFirstName())
                 .lastName(userDetailsRequest.getLastName())

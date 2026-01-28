@@ -19,6 +19,7 @@ public class MemberController {
 
     private final MemberService memberService;
 
+    //register new users
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest member) {
 
@@ -26,6 +27,7 @@ public class MemberController {
 
     }
 
+    //login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
 
@@ -33,6 +35,7 @@ public class MemberController {
 
     }
 
+    //filling up user details
     @PostMapping("/userdetails")
     public ResponseEntity<?> userDetails(@RequestBody UserDetailsRequest userDetailsRequest, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
 
@@ -40,6 +43,7 @@ public class MemberController {
 
     }
 
+    //getting user information
     @GetMapping("/userdetails")
     public ResponseEntity<?> getUserDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
 
