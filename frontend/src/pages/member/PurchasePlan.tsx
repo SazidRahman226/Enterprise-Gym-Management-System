@@ -1,173 +1,266 @@
-import { useState } from "react";
-import { Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
+import { Check, CreditCard, AlertCircle, Loader2, CheckCircle } from "lucide-react";
 
-const plans = [
+interface Plan {
+    name: string;
+    price: number;
+    features: string[];
+    popular?: boolean;
+}
+
+interface Invoice {
+    invoice_id: string;
+    status: string;
+    plan?: string;
+    amount?: number;
+}
+
+interface Subscription {
+    status: string;
+    plan?: string;
+    expiresAt?: string;
+}
+
+const PLANS: Plan[] = [
     {
-        name: "Silver",
-        price: "$29",
-        period: "/month",
-        features: ["Access to gym floor", "Locker room access", "Free WiFi"],
+        name: 'Silver',
+        price: 29,
+        features: ['Gym Floor Access', 'Locker Room', 'Free WiFi']
     },
     {
-        name: "Gold",
-        price: "$59",
-        period: "/month",
-        features: ["All Silver features", "Group classes", "1 Personal training session"],
-        popular: true,
+        name: 'Gold',
+        price: 59,
+        features: ['Gym Floor Access', 'Group Classes', '1 Trainer Session/mo', 'Sauna Access'],
+        popular: true
     },
     {
-        name: "Platinum",
-        price: "$99",
-        period: "/month",
-        features: ["All Gold features", "Unlimited Personal training", "Sauna access", "Guest pass"],
-    },
+        name: 'Platinum',
+        price: 99,
+        features: ['All Access 24/7', 'Unlimited Classes', '5 Trainer Sessions/mo', 'Nutrition Plan']
+    }
 ];
 
 export function PurchasePlan() {
-    const [loading, setLoading] = useState(false);
-    const [invoiceData, setInvoiceData] = useState<{ paymentId: string; status: string } | null>(null);
-    const [selectedPlanName, setSelectedPlanName] = useState<string | null>(null);
-    const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
+    const [subscription, setSubscription] = useState<Subscription | null>(null);
+    const [pendingInvoice, setPendingInvoice] = useState<Invoice | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [applying, setApplying] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
-    
+    useEffect(() => {
+        fetchSubscriptionStatus();
+    }, []);
 
-    const handleSelectPlan = async (planName: string) => {
-    setLoading(true);
-    setSelectedPlanName(planName);
-    setPaymentMessage(null);
-    try {
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
-            alert("Authentication error: Please log in again.");
-            setSelectedPlanName(null);
-            setLoading(false);
-            return;
-        }
-
-        const response = await fetch(`/api/subscriptions/apply?plan=${planName}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            console.error('Error response:', response.status, errorData);
-            throw new Error(`Failed to create subscription: ${response.status} - ${errorData}`);
-        }
-
-        const data = await response.json();
-        setInvoiceData(data);
-    } catch (error) {
-        console.error(error);
-        alert("Failed to select plan. Please try again.");
-        setSelectedPlanName(null);
-    } finally {
-        setLoading(false);
-    }
-};
-
-    const handlePayNow = async () => {
-        if (!invoiceData) return;
+    const fetchSubscriptionStatus = async () => {
         setLoading(true);
+        setError(null);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/subscriptions/pay', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    paymentId: invoiceData.paymentId,
-                    amountPaid: 150, // Mock amount, ideally derived from plan
-                    paymentMethod: "Bkash",
-                    transactionRef: `tx-${Date.now()}`
-                })
+
+            // Fetch current subscription status
+            const subResponse = await fetch('/api/subscriptions/current', {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            if (!response.ok) throw new Error('Payment failed');
+            if (subResponse.ok) {
+                const subData = await subResponse.json();
+                setSubscription(subData);
+            }
 
-            const data = await response.json();
-            setPaymentMessage(data.message);
-            setInvoiceData(null); // Clear pending invoice on success
-            setSelectedPlanName(null);
-        } catch (error) {
-            console.error(error);
-            alert("Payment failed. Please try again.");
+            // Fetch pending invoices
+            const invoiceResponse = await fetch('/api/subscriptions/invoices/pending', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (invoiceResponse.ok) {
+                const invoiceData = await invoiceResponse.json();
+                if (invoiceData && invoiceData.invoice_id) {
+                    setPendingInvoice(invoiceData);
+                }
+            }
+        } catch (err: any) {
+            console.error('Failed to fetch subscription status:', err);
+            // Don't show error for 404s - just means no subscription yet
         } finally {
             setLoading(false);
         }
     };
 
+    const handleSelectPlan = async (planName: string) => {
+        setApplying(true);
+        setError(null);
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/subscriptions/apply?plan=${planName.toLowerCase()}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'Failed to apply for plan');
+            }
+
+            const data = await response.json();
+            const plan = PLANS.find(p => p.name.toLowerCase() === planName.toLowerCase());
+
+            setPendingInvoice({
+                invoice_id: data.invoice_id,
+                status: data.status,
+                plan: planName,
+                amount: plan?.price
+            });
+
+        } catch (err: any) {
+            setError(err.message || 'Failed to apply for plan');
+        } finally {
+            setApplying(false);
+        }
+    };
+
+    const handlePayNow = () => {
+        if (pendingInvoice) {
+            navigate(`/dashboard/member/payment/${pendingInvoice.invoice_id}`, {
+                state: {
+                    invoiceId: pendingInvoice.invoice_id,
+                    plan: pendingInvoice.plan,
+                    amount: pendingInvoice.amount
+                }
+            });
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+            </div>
+        );
+    }
+
+    const hasActiveSubscription = subscription?.status === 'active';
+
     return (
         <div className="space-y-8">
-            <div className="text-center max-w-2xl mx-auto">
-                <h2 className="text-3xl font-extrabold text-primary-950">Choose your plan</h2>
-                <p className="mt-4 text-lg text-primary-700">
-                    Unlock your full potential with a membership that fits your lifestyle.
-                </p>
-                {paymentMessage && (
-                    <div className="mt-4 p-4 bg-green-50 text-green-700 rounded-lg">
-                        {paymentMessage}
-                    </div>
-                )}
+            <div>
+                <h1 className="text-3xl font-bold text-primary-950">Purchase Subscription Plan</h1>
+                <p className="mt-2 text-primary-700">Choose the plan that fits your fitness goals</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
-                {plans.map((plan) => {
-                    const isPending = invoiceData?.status === 'pending' && selectedPlanName === plan.name;
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                    <span className="text-sm">{error}</span>
+                </div>
+            )}
 
-                    return (
-                        <div key={plan.name} className={`relative flex flex-col p-6 bg-white rounded-2xl shadow-lg border ${plan.popular ? 'border-primary-500 ring-2 ring-primary-500 ring-opacity-50' : 'border-primary-200'} ${selectedPlanName && selectedPlanName !== plan.name ? 'opacity-50' : ''}`}>
-                            {plan.popular && (
-                                <div className="absolute top-0 transform -translate-y-1/2 left-1/2 -translate-x-1/2">
-                                    <span className="inline-block px-4 py-1 rounded-full bg-primary-500 text-white text-xs font-bold tracking-wide uppercase">
-                                        Most Popular
-                                    </span>
-                                </div>
+            {/* Active Subscription */}
+            {hasActiveSubscription && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+                    <div className="flex items-start gap-3">
+                        <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
+                        <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-green-900">Active Subscription</h3>
+                            <p className="mt-1 text-green-700">
+                                You currently have an active <span className="font-semibold">{subscription.plan}</span> plan.
+                            </p>
+                            {subscription.expiresAt && (
+                                <p className="mt-1 text-sm text-green-600">
+                                    Expires on: {new Date(subscription.expiresAt).toLocaleDateString()}
+                                </p>
                             )}
-                            <div className="mb-4">
-                                <h3 className="text-xl font-bold text-primary-950">{plan.name}</h3>
-                                <div className="mt-4 flex items-baseline text-primary-950">
-                                    <span className="text-4xl font-extrabold tracking-tight">{plan.price}</span>
-                                    <span className="ml-1 text-xl font-semibold text-primary-500">{plan.period}</span>
-                                </div>
-                            </div>
-
-                            <ul className="mt-6 flex-1 space-y-4">
-                                {plan.features.map((feature) => (
-                                    <li key={feature} className="flex items-start">
-                                        <Check className="h-5 w-5 text-primary-500 flex-shrink-0" />
-                                        <span className="ml-3 text-sm text-primary-600">{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-
-                            <div className="mt-8">
-                                {isPending ? (
-                                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handlePayNow} disabled={loading}>
-                                        {loading ? 'Processing...' : 'Pay Now'}
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        className="w-full"
-                                        variant={plan.popular ? 'default' : 'outline'}
-                                        onClick={() => handleSelectPlan(plan.name)}
-                                        disabled={loading || (!!selectedPlanName && selectedPlanName !== plan.name)}
-                                    >
-                                        {loading && selectedPlanName === plan.name ? 'Processing...' : 'Select Plan'}
-                                    </Button>
-                                )}
-                            </div>
                         </div>
-                    );
-                })}
-            </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Pending Invoice */}
+            {pendingInvoice && !hasActiveSubscription && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold text-yellow-900">Pending Payment</h3>
+                            <p className="mt-1 text-yellow-700">
+                                You have a pending invoice for the <span className="font-semibold">{pendingInvoice.plan}</span> plan
+                            </p>
+                            <p className="mt-2 text-2xl font-bold text-yellow-900">
+                                ${pendingInvoice.amount}/month
+                            </p>
+                            <p className="text-sm text-yellow-600">Invoice ID: {pendingInvoice.invoice_id}</p>
+                        </div>
+                        <Button
+                            onClick={handlePayNow}
+                            className="flex items-center gap-2"
+                        >
+                            <CreditCard className="h-4 w-4" />
+                            Pay Now
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Available Plans */}
+            {!hasActiveSubscription && (
+                <div>
+                    <h2 className="text-2xl font-bold text-primary-950 mb-6">
+                        {pendingInvoice ? 'Other Available Plans' : 'Choose Your Plan'}
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {PLANS.map((plan) => (
+                            <div
+                                key={plan.name}
+                                className={`relative p-8 border rounded-2xl transition-all hover:shadow-xl ${plan.popular
+                                        ? 'border-primary-500 ring-2 ring-primary-500 ring-opacity-20 bg-primary-50/30'
+                                        : 'border-primary-200 bg-white'
+                                    }`}
+                            >
+                                {plan.popular && (
+                                    <span className="absolute top-0 right-0 -mt-3 mr-3 px-3 py-1 bg-primary-500 text-white text-xs font-bold rounded-full uppercase tracking-wide">
+                                        Popular
+                                    </span>
+                                )}
+                                <h3 className="text-2xl font-bold text-primary-950">{plan.name}</h3>
+                                <p className="mt-4 mb-6">
+                                    <span className="text-4xl font-extrabold text-primary-950">${plan.price}</span>
+                                    <span className="text-primary-500">/month</span>
+                                </p>
+                                <ul className="space-y-4 mb-8">
+                                    {plan.features.map((feature) => (
+                                        <li key={feature} className="flex items-center text-primary-700">
+                                            <Check className="h-5 w-5 text-primary-500 mr-2 flex-shrink-0" />
+                                            {feature}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <Button
+                                    className="w-full"
+                                    variant={plan.popular ? 'default' : 'outline'}
+                                    onClick={() => handleSelectPlan(plan.name)}
+                                    disabled={applying || (pendingInvoice?.plan === plan.name)}
+                                >
+                                    {applying ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            Applying...
+                                        </>
+                                    ) : pendingInvoice?.plan === plan.name ? (
+                                        'Invoice Pending'
+                                    ) : (
+                                        'Select Plan'
+                                    )}
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -8,6 +8,7 @@ import { MemberOverview } from './pages/member/MemberOverview';
 import { MemberProfile } from './pages/member/MemberProfile';
 import { MemberAttendance } from './pages/member/MemberAttendance';
 import { PurchasePlan } from './pages/member/PurchasePlan';
+import { PaymentGateway } from './pages/member/PaymentGateway';
 import { TrainerOverview } from './pages/trainer/TrainerOverview';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="member/profile" element={<MemberProfile />} />
           <Route path="member/attendance" element={<MemberAttendance />} />
           <Route path="member/purchase" element={<PurchasePlan />} />
+          <Route path="member/payment/:invoiceId" element={<PaymentGateway />} />
         </Route>
       </Route>
 
