@@ -26,8 +26,13 @@ public class TrainerModel {
 
     private String specialization;
 
+    @Column(length = 200)
+    private String shortDescription;
+
     @Column(precision = 5, scale = 2)
     private BigDecimal commissionRate;
+
+    private String status; // hired, pending, rejected
 
     @OneToMany(mappedBy = "trainer")
     private List<ClassScheduleModel> schedules;

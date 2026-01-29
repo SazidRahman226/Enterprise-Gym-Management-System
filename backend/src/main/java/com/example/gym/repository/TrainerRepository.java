@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface TrainerRepository extends JpaRepository<TrainerModel, Long> {
     List<TrainerModel> findByOrderByCommissionRateDesc();
+
 }

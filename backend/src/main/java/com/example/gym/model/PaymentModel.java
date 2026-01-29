@@ -7,31 +7,29 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "payments")
 public class PaymentModel {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "payment_id")
-    private Long paymentId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID paymentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id", nullable = false)
     private InvoiceModel invoice;
 
-    @Column(name = "payment_date", nullable = false)
+    @Column(nullable = false)
     private LocalDate paymentDate;
 
-    @Column(name = "amount_paid", nullable = false)
+    @Column(nullable = false)
     private BigDecimal amountPaid;
 
-    @Column(name = "payment_method")
-    private String paymentMethod; // Card, Cash, Online
+    private String paymentMethod;
 
-    @Column(name = "transaction_ref")
     private String transactionRef;
 }

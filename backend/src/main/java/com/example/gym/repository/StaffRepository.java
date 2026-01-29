@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface StaffRepository extends JpaRepository<StaffModel, Long> {
     List<StaffModel> findByRole(String role);
     Optional<StaffModel> findByEmail(String email);
+    Boolean existsByEmailAndCurrentRole(String email, String role);
 }

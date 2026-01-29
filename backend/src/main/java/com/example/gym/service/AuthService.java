@@ -1,12 +1,15 @@
 package com.example.gym.service;
 import com.example.gym.dto.LoginRequest;
 import com.example.gym.dto.MemberRegisterRequest;
+import com.example.gym.dto.TrainerRegister;
 import com.example.gym.dto.UserDetailsRequest;
 import com.example.gym.model.MemberModel;
 import com.example.gym.model.StaffModel;
+import com.example.gym.model.TrainerModel;
 import com.example.gym.model.UserCredentialModel;
 import com.example.gym.repository.MemberRepository;
 import com.example.gym.repository.StaffRepository;
+import com.example.gym.repository.TrainerRepository;
 import com.example.gym.repository.UserCredentialRepository;
 import com.example.gym.security.JwtUtil;
 import com.example.gym.util.ValidationUtil;
@@ -22,15 +25,16 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 
-public class MemberService {
+public class AuthService {
 
     private final UserCredentialRepository userCredentialRepository;
     private final JwtUtil jwtUtil;
     private final MemberRepository memberRepository;
     private final ValidationUtil validationUtil;
     private final StaffRepository staffRepository;
+    private final TrainerRepository trainerRepository;
 
-    public ResponseEntity<?> register(@RequestBody MemberRegisterRequest member) {
+    public ResponseEntity<?> registerMember(@RequestBody MemberRegisterRequest member) {
 
         if(userCredentialRepository.findByUserEmail(member.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().build();
@@ -61,10 +65,49 @@ public class MemberService {
 
         return ResponseEntity.ok(Map.of(
                 "token", token,
-                "user", Map.of(
-                        "email", member.getEmail()
+                "email", member.getEmail()
+        ));
+    }
 
-                )
+    public ResponseEntity<?> registerTrainer(@RequestBody TrainerRegister trainer) {
+
+        if(userCredentialRepository.findByUserEmail(trainer.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String hashedPassword = BCrypt.hashpw(trainer.getPassword(),  BCrypt.gensalt());
+
+        UserCredentialModel user = UserCredentialModel.builder()
+                .userEmail(trainer.getEmail())
+                .userType("trainer")
+                .passwordHash(hashedPassword)
+                .build();
+
+        StaffModel staff = StaffModel.builder()
+                .firstName(trainer.getFirstName())
+                .lastName(trainer.getLastName())
+                .email(trainer.getEmail())
+                .role("trainer")
+                .build();
+
+        TrainerModel trainerModel = TrainerModel.builder()
+                .staff(staff)
+                .specialization(trainer.getSpecialization())
+                .shortDescription(trainer.getShortDescription())
+                .status("pending")
+                .build();
+
+        staff.setTrainerProfile(trainerModel);
+
+        userCredentialRepository.save(user);
+        staffRepository.save(staff);
+        trainerRepository.save(trainerModel);
+
+        String token = jwtUtil.generateToken(user.getUserEmail());
+
+        return ResponseEntity.ok(Map.of(
+                "token", token,
+                "email", trainer.getEmail()
         ));
     }
 

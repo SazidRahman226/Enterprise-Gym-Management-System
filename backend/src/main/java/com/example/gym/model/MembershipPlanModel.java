@@ -6,28 +6,28 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "membership_plans")
 
 public class MembershipPlanModel {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "plan_id")
-    private Long planId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID planId;
 
     @Column(nullable = false)
-    private String name; // Gold, Silver, Platinum
+    private String name; // gold, silver, platinum
 
-    @Column(name = "duration_days", nullable = false)
+    @Column(nullable = false)
     private Integer durationDays;
 
-    @Column(name = "base_fee", nullable = false)
+    @Column(nullable = false)
     private BigDecimal baseFee;
 
-    @Column(name = "access_level")
-    private String accessLevel;
+    private BigDecimal discountedFee;
+
 }

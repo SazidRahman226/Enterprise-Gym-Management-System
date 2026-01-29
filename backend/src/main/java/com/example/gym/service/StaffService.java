@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-@RequestMapping
 @RequiredArgsConstructor
 
 public class StaffService {
@@ -31,7 +30,7 @@ public class StaffService {
         return ResponseEntity.ok(memberRepository.findPendingMembers("pending"));
     }
 
-    public ResponseEntity<?> alterMemberCurrentStatus(@PathVariable UUID uuid, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader, String currentStatus)
+    public ResponseEntity<?> alterMemberCurrentStatus(@PathVariable UUID uuid, String authHeader, String currentStatus)
     {
         validationUtil.isStaffAdmin(authHeader);
         MemberModel memberModel = memberRepository.findByMemberId(uuid)

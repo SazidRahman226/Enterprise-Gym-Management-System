@@ -31,52 +31,33 @@ public class ValidationUtil {
         return jwtUtil.extractUserEmail(token);
     }
 
-    public String validateUserAuthorization(String authHeader, String role) {
+    public Boolean validateUserAuthorization(String authHeader, String role) {
 
         String email = extractUserEmailFromAuthHeader(authHeader);
-        UserCredentialModel user = userCredentialRepository.findByUserEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-        if(!user.getUserType().equals(role))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied!");
-
-        return email;
+        return userCredentialRepository.existsByEmailAndCurrentRole(email, role);
     }
 
     //validates if the token is of staff member with a desired role
-    public String validateStaffAuthorization(String authHeader, String role) {
+    public Boolean validateStaffAuthorization(String authHeader, String role) {
 
-        String email = validateUserAuthorization(authHeader, "staff");
-
-        StaffModel staff = staffRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff not found"));
-
-        if(!staff.getRole().equals(role))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Staff role is not " + role);
-
-        return email;
+        String email = extractUserEmailFromAuthHeader(authHeader);
+        return staffRepository.existsByEmailAndCurrentRole(email, role);
     }
 
 
-
-
     //validates if the token is of a registered member
-    public void validateMemberAuthorization(String authHeader, String status)
+    public Boolean validateMemberAuthorization(String authHeader, String status)
     {
-        String email = validateUserAuthorization(authHeader, "member");
+        String email = extractUserEmailFromAuthHeader(authHeader);
 
-        MemberModel member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
-
-        if(!member.getCurrentStatus().equals(status))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Member status is not " + status);
+        return memberRepository.existsByEmailAndCurrentStatus(email, status);
 
     }
 
     //checks if the member is currently active
-    public void isMemberActive(String authHeader)
+    public Boolean isMemberActive(String authHeader)
     {
-        validateMemberAuthorization(authHeader, "active");
+        return validateMemberAuthorization(authHeader, "active");
     }
 
     //checks if the staff is an admin
@@ -84,4 +65,11 @@ public class ValidationUtil {
     {
         validateStaffAuthorization(authHeader, "admin");
     }
+
+    //checks if the staff is an admin
+    public Boolean findIfMemberExists(String authHeader)
+    {
+        return validateUserAuthorization(authHeader, "member");
+    }
+
 }

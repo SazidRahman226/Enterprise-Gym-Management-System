@@ -2,8 +2,8 @@ package com.example.gym.controller;
 
 import com.example.gym.dto.LoginRequest;
 import com.example.gym.dto.MemberRegisterRequest;
-import com.example.gym.dto.UserDetailsRequest;
-import com.example.gym.service.MemberService;
+import com.example.gym.dto.TrainerRegister;
+import com.example.gym.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -14,16 +14,23 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 
-public class MemberController {
+public class AuthController {
 
 
-    private final MemberService memberService;
+    private final AuthService authService;
 
     //register new users
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody MemberRegisterRequest member) {
+    @PostMapping("/register/member")
+    public ResponseEntity<?> registerMember(@RequestBody MemberRegisterRequest member) {
 
-        return memberService.register(member); //Initial registration just using email and password
+        return authService.registerMember(member); //Initial registration just using email and password
+
+    }
+
+    @PostMapping("/register/trainer")
+    public ResponseEntity<?> registerTrainer(@RequestBody TrainerRegister trainer) {
+
+        return authService.registerTrainer(trainer); //Initial registration just using email and password
 
     }
 
@@ -31,7 +38,7 @@ public class MemberController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
 
-       return memberService.login(loginRequest); //Login using email and password
+       return authService.login(loginRequest); //Login using email and password
 
     }
 
@@ -39,7 +46,7 @@ public class MemberController {
 //    @PostMapping("/userdetails")
 //    public ResponseEntity<?> userDetails(@RequestBody UserDetailsRequest userDetailsRequest, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
 //
-//        return memberService.createUserDetails(userDetailsRequest, authHeader); //Giving user detailed info
+//        return authService.createUserDetails(userDetailsRequest, authHeader); //Giving user detailed info
 //
 //    }
 
@@ -47,7 +54,7 @@ public class MemberController {
     @GetMapping("/userdetails")
     public ResponseEntity<?> getUserDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
 
-        return memberService.getUserdetails(authHeader); //Get user information
+        return authService.getUserdetails(authHeader); //Get user information
 
     }
 }
