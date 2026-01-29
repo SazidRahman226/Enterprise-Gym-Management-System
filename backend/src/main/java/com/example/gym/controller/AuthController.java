@@ -9,59 +9,65 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
 
 public class AuthController {
 
-
     private final AuthService authService;
 
-    //register new users
+    // register new users
     @PostMapping("/register/member")
     public ResponseEntity<?> registerMember(@RequestBody MemberRegisterRequest member) {
 
-        return authService.registerMember(member); //Initial registration just using email and password
+        return authService.registerMember(member); // Initial registration just using email and password
 
     }
 
     @PostMapping("/register/trainer")
     public ResponseEntity<?> registerTrainer(@RequestBody TrainerRegister trainer) {
 
-        return authService.registerTrainer(trainer); //Initial registration just using email and password
+        return authService.registerTrainer(trainer); // Initial registration just using email and password
 
     }
 
-    //login
+    // login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
 
-       return authService.login(loginRequest); //Login using email and password
+        return authService.login(loginRequest); // Login using email and password
 
     }
 
-//    //filling up user details
-//    @PostMapping("/userdetails")
-//    public ResponseEntity<?> userDetails(@RequestBody UserDetailsRequest userDetailsRequest, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
-//
-//        return authService.createUserDetails(userDetailsRequest, authHeader); //Giving user detailed info
-//
-//    }
+    // filling up user details
+    @PostMapping("/userdetails")
+    public ResponseEntity<?> userDetails(@RequestBody com.example.gym.dto.UserDetailsRequest userDetailsRequest,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
 
-    //getting user information
+        return authService.createUserDetails(userDetailsRequest, authHeader); // Giving user detailed info
+
+    }
+
+    // getting user information
     @GetMapping("/member-details")
-    public ResponseEntity<?> getUserDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+    public ResponseEntity<?> getMemberDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
 
-        return authService.getMemberDetails(authHeader); //Get user information
+        return authService.getMemberDetails(authHeader); // Get user information
 
     }
+
+    // @GetMapping("/userdetails")
+    // public ResponseEntity<?>
+    // getGenericUserDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String
+    // authHeader) {
+    // return authService.getUserDetails(authHeader);
+    // }
 
     @GetMapping("/trainer-details")
     public ResponseEntity<?> getTrainerDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
 
-        return authService.getTrainerDetails(authHeader); //Get user information
+        return authService.getTrainerDetails(authHeader); // Get user information
 
     }
 

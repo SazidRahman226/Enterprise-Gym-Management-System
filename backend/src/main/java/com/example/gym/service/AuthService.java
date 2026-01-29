@@ -1,4 +1,5 @@
 package com.example.gym.service;
+
 import com.example.gym.dto.LoginRequest;
 import com.example.gym.dto.MemberRegisterRequest;
 import com.example.gym.dto.TrainerRegister;
@@ -27,195 +28,185 @@ import java.util.Map;
 
 public class AuthService {
 
-    private final UserCredentialRepository userCredentialRepository;
-    private final JwtUtil jwtUtil;
-    private final MemberRepository memberRepository;
-    private final ValidationUtil validationUtil;
-    private final StaffRepository staffRepository;
-    private final TrainerRepository trainerRepository;
+        private final UserCredentialRepository userCredentialRepository;
+        private final JwtUtil jwtUtil;
+        private final MemberRepository memberRepository;
+        private final ValidationUtil validationUtil;
+        private final StaffRepository staffRepository;
+        private final TrainerRepository trainerRepository;
 
-    public ResponseEntity<?> registerMember(@RequestBody MemberRegisterRequest member) {
+        public ResponseEntity<?> registerMember(@RequestBody MemberRegisterRequest member) {
 
-        if(userCredentialRepository.findByUserEmail(member.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().build();
+                if (userCredentialRepository.findByUserEmail(member.getEmail()).isPresent()) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                String hashedPassword = BCrypt.hashpw(member.getPassword(), BCrypt.gensalt());
+
+                UserCredentialModel user = UserCredentialModel.builder()
+                                .userEmail(member.getEmail())
+                                .userType("member")
+                                .passwordHash(hashedPassword)
+                                .build();
+
+                MemberModel memberModel = MemberModel.builder()
+                                .firstName(member.getFirstName())
+                                .lastName(member.getLastName())
+                                .email(member.getEmail())
+                                .phone(member.getPhone())
+                                .emergencyContact(member.getEmergencyContact())
+                                .dob(member.getDob())
+                                .currentStatus("pending")
+                                .build();
+
+                userCredentialRepository.save(user);
+                memberRepository.save(memberModel);
+
+                String token = jwtUtil.generateToken(user.getUserEmail());
+
+                return ResponseEntity.ok(Map.of(
+                                "token", token,
+                                "email", member.getEmail()));
         }
 
-        String hashedPassword = BCrypt.hashpw(member.getPassword(),  BCrypt.gensalt());
+        public ResponseEntity<?> registerTrainer(@RequestBody TrainerRegister trainer) {
 
-        UserCredentialModel user = UserCredentialModel.builder()
-                .userEmail(member.getEmail())
-                .userType("member")
-                .passwordHash(hashedPassword)
-                .build();
+                if (userCredentialRepository.findByUserEmail(trainer.getEmail()).isPresent()) {
+                        return ResponseEntity.badRequest().build();
+                }
 
-        MemberModel memberModel = MemberModel.builder()
-                .firstName(member.getFirstName())
-                .lastName(member.getLastName())
-                .email(member.getEmail())
-                .phone(member.getPhone())
-                .emergencyContact(member.getEmergencyContact())
-                .dob(member.getDob())
-                .currentStatus("pending")
-                .build();
+                String hashedPassword = BCrypt.hashpw(trainer.getPassword(), BCrypt.gensalt());
 
-        userCredentialRepository.save(user);
-        memberRepository.save(memberModel);
+                UserCredentialModel user = UserCredentialModel.builder()
+                                .userEmail(trainer.getEmail())
+                                .userType("staff")
+                                .passwordHash(hashedPassword)
+                                .build();
 
-        String token = jwtUtil.generateToken(user.getUserEmail());
+                StaffModel staff = StaffModel.builder()
+                                .firstName(trainer.getFirstName())
+                                .lastName(trainer.getLastName())
+                                .email(trainer.getEmail())
+                                .role("trainer")
+                                .build();
 
-        return ResponseEntity.ok(Map.of(
-                "token", token,
-                "email", member.getEmail()
-        ));
-    }
+                TrainerModel trainerModel = TrainerModel.builder()
+                                .staff(staff)
+                                .specialization(trainer.getSpecialization())
+                                .shortDescription(trainer.getShortDescription())
+                                .status("pending")
+                                .build();
 
-    public ResponseEntity<?> registerTrainer(@RequestBody TrainerRegister trainer) {
+                staff.setTrainerProfile(trainerModel);
 
-        if(userCredentialRepository.findByUserEmail(trainer.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().build();
+                userCredentialRepository.save(user);
+                staffRepository.save(staff);
+                trainerRepository.save(trainerModel);
+
+                String token = jwtUtil.generateToken(user.getUserEmail());
+
+                return ResponseEntity.ok(Map.of(
+                                "token", token,
+                                "email", trainer.getEmail()));
         }
 
-        String hashedPassword = BCrypt.hashpw(trainer.getPassword(),  BCrypt.gensalt());
+        public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
 
-        UserCredentialModel user = UserCredentialModel.builder()
-                .userEmail(trainer.getEmail())
-                .userType("staff")
-                .passwordHash(hashedPassword)
-                .build();
+                UserCredentialModel _user = userCredentialRepository.findByUserEmail(loginRequest.getEmail())
+                                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
 
-        StaffModel staff = StaffModel.builder()
-                .firstName(trainer.getFirstName())
-                .lastName(trainer.getLastName())
-                .email(trainer.getEmail())
-                .role("trainer")
-                .build();
+                if (!BCrypt.checkpw(loginRequest.getPassword(), _user.getPasswordHash())) {
+                        throw new RuntimeException("Invalid email or password");
+                }
 
-        TrainerModel trainerModel = TrainerModel.builder()
-                .staff(staff)
-                .specialization(trainer.getSpecialization())
-                .shortDescription(trainer.getShortDescription())
-                .status("pending")
-                .build();
+                String token = jwtUtil.generateToken(_user.getUserEmail());
 
-        staff.setTrainerProfile(trainerModel);
+                String role = "";
 
-        userCredentialRepository.save(user);
-        staffRepository.save(staff);
-        trainerRepository.save(trainerModel);
+                if (_user.getUserType().equals("member")) {
+                        role = "member";
+                } else if (_user.getUserType().equals("staff")) {
 
-        String token = jwtUtil.generateToken(user.getUserEmail());
+                        StaffModel staff = staffRepository.findByEmail(loginRequest.getEmail())
+                                        .orElseThrow(() -> new RuntimeException("Access denied!"));
 
-        return ResponseEntity.ok(Map.of(
-                "token", token,
-                "email", trainer.getEmail()
-        ));
-    }
+                        role = staff.getRole();
+                }
 
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-
-        UserCredentialModel _user = userCredentialRepository.findByUserEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
-
-        if (!BCrypt.checkpw(loginRequest.getPassword(), _user.getPasswordHash())) {
-            throw new RuntimeException("Invalid email or password");
+                return ResponseEntity.ok(Map.of(
+                                "token", token,
+                                "email", _user.getUserEmail(),
+                                "role", role));
         }
 
-        String token = jwtUtil.generateToken(_user.getUserEmail());
+        public ResponseEntity<?> createUserDetails(@RequestBody UserDetailsRequest userDetailsRequest,
+                        String authHeader) {
 
-        String role = "";
+                String userEmail = validationUtil.extractUserEmailFromAuthHeader(authHeader);
 
-        if(_user.getUserType().equals("member")) {
-            role = "member";
-        } else if(_user.getUserType().equals("staff")) {
+                MemberModel member = MemberModel.builder()
+                                .firstName(userDetailsRequest.getFirstName())
+                                .lastName(userDetailsRequest.getLastName())
+                                .dob(userDetailsRequest.getDob())
+                                .phone(userDetailsRequest.getPhone())
+                                .currentStatus("pending")
+                                .email(userEmail)
+                                .emergencyContact(userDetailsRequest.getEmergencyContact())
+                                .build();
 
-            StaffModel staff = staffRepository.findByEmail(loginRequest.getEmail())
-                    .orElseThrow(() -> new RuntimeException("Access denied!"));
-
-            role = staff.getRole();
+                memberRepository.save(member);
+                return ResponseEntity.ok(Map.of(
+                                "message", "ok",
+                                "username", member.getFirstName() + " " + member.getLastName(),
+                                "email", userEmail));
         }
 
-        return ResponseEntity.ok(Map.of(
-                "token", token,
-                "email", _user.getUserEmail(),
-                "role", role
-                )
-        );
-    }
+        public ResponseEntity<?> getMemberDetails(String authHeader) {
 
-    public ResponseEntity<?> createUserDetails(@RequestBody UserDetailsRequest userDetailsRequest, String authHeader)
-    {
+                String userEmail = validationUtil.extractUserEmailFromAuthHeader(authHeader);
 
-        String userEmail = validationUtil.extractUserEmailFromAuthHeader(authHeader);
+                MemberModel memberModel = memberRepository.findByEmail(userEmail)
+                                .orElseThrow(() -> new RuntimeException("User details not found"));
 
-        MemberModel member = MemberModel.builder()
-                .firstName(userDetailsRequest.getFirstName())
-                .lastName(userDetailsRequest.getLastName())
-                .dob(userDetailsRequest.getDob())
-                .phone(userDetailsRequest.getPhone())
-                .currentStatus("pending")
-                .email(userEmail)
-                .emergencyContact(userDetailsRequest.getEmergencyContact())
-                .build();
+                String username = memberModel.getFirstName() + " " + memberModel.getLastName();
+                LocalDate dob = memberModel.getDob();
+                String phone = memberModel.getPhone();
+                String currentStatus = memberModel.getCurrentStatus();
+                String emergencyContact = memberModel.getEmergencyContact();
 
-        memberRepository.save(member);
-        return ResponseEntity.ok(Map.of(
-                "message", "ok",
-                "username", member.getFirstName() + " " + member.getLastName(),
-                "email", userEmail
-        ));
-    }
+                return ResponseEntity.ok(Map.of(
+                                "username", username,
+                                "email", userEmail,
+                                "dob", dob,
+                                "phone", phone,
+                                "emergency-contact", emergencyContact,
+                                "current-status", currentStatus));
 
-    public ResponseEntity<?> getMemberDetails(String authHeader)
-    {
+        }
 
-        String userEmail = validationUtil.extractUserEmailFromAuthHeader(authHeader);
+        public ResponseEntity<?> getTrainerDetails(String authHeader) {
 
-        MemberModel memberModel = memberRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User details not found"));
+                String staffEmail = validationUtil.extractUserEmailFromAuthHeader(authHeader);
 
-        String username = memberModel.getFirstName() + " " + memberModel.getLastName();
-        LocalDate dob = memberModel.getDob();
-        String phone = memberModel.getPhone();
-        String currentStatus = memberModel.getCurrentStatus();
-        String emergencyContact = memberModel.getEmergencyContact();
+                StaffModel staffModel = staffRepository.findByEmail(staffEmail)
+                                .orElseThrow(() -> new RuntimeException("User details not found"));
 
+                if (staffModel.getTrainerProfile() == null)
+                        throw new RuntimeException("Unable to find trainer profile ");
 
-        return ResponseEntity.ok(Map.of(
-                "username", username,
-                "email", userEmail,
-                "dob", dob,
-                "phone", phone,
-                "emergency-contact", emergencyContact,
-                "current-status", currentStatus
-        ));
+                String username = staffModel.getFirstName() + " " + staffModel.getLastName();
+                String role = staffModel.getRole();
+                String description = staffModel.getTrainerProfile().getShortDescription();
+                String specialization = staffModel.getTrainerProfile().getSpecialization();
+                String status = staffModel.getTrainerProfile().getStatus();
 
-    }
+                return ResponseEntity.ok(Map.of(
+                                "username", username,
+                                "email", staffEmail,
+                                "role", role,
+                                "description", description,
+                                "specialization", specialization,
+                                "status", status));
 
-    public ResponseEntity<?> getTrainerDetails(String authHeader)
-    {
-
-        String staffEmail = validationUtil.extractUserEmailFromAuthHeader(authHeader);
-
-        StaffModel staffModel = staffRepository.findByEmail(staffEmail)
-                .orElseThrow(() -> new RuntimeException("User details not found"));
-
-        if(staffModel.getTrainerProfile() == null)
-            throw new RuntimeException("Unable to find trainer profile ");
-
-        String username = staffModel.getFirstName() + " " + staffModel.getLastName();
-        String role = staffModel.getRole();
-        String description = staffModel.getTrainerProfile().getShortDescription();
-        String specialization = staffModel.getTrainerProfile().getSpecialization();
-        String status = staffModel.getTrainerProfile().getStatus();
-
-        return ResponseEntity.ok(Map.of(
-                "username", username,
-                "email", staffEmail,
-                "role", role,
-                "description", description,
-                "specialization", specialization,
-                "status", status
-        ));
-
-    }
+        }
 }
