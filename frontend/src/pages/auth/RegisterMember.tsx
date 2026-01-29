@@ -175,13 +175,12 @@ export function RegisterMember() {
                                 </div>
                                 <div>
                                     <label htmlFor="emergencyContact" className="block text-sm font-medium text-primary-900 mb-2">
-                                        Emergency Contact
+                                        Emergency Contact (Optional)
                                     </label>
                                     <Input
                                         id="emergencyContact"
                                         name="emergencyContact"
                                         type="text"
-                                        required
                                         placeholder="Jane Doe - 555-999-1122"
                                         value={formData.emergencyContact}
                                         onChange={handleChange}

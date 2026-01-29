@@ -59,6 +59,9 @@ export function PaymentGateway() {
             const data = await response.json();
             console.log('Payment response:', data);
 
+            // Clear the pending invoice from localStorage
+            localStorage.removeItem('pending_invoice');
+
             setSuccess(true);
 
             // Redirect to dashboard after success

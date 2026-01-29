@@ -42,6 +42,8 @@ const PLANS: Plan[] = [
     }
 ];
 
+const STORAGE_KEY = 'pending_invoice';
+
 export function PurchasePlan() {
     const [subscription, setSubscription] = useState<Subscription | null>(null);
     const [pendingInvoice, setPendingInvoice] = useState<Invoice | null>(null);
@@ -60,6 +62,17 @@ export function PurchasePlan() {
         try {
             const token = localStorage.getItem('token');
 
+            // First check localStorage for pending invoice
+            const storedInvoice = localStorage.getItem(STORAGE_KEY);
+            if (storedInvoice) {
+                try {
+                    const invoice = JSON.parse(storedInvoice);
+                    setPendingInvoice(invoice);
+                } catch (e) {
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            }
+
             // Fetch current subscription status
             const subResponse = await fetch('/api/subscriptions/current', {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -68,9 +81,15 @@ export function PurchasePlan() {
             if (subResponse.ok) {
                 const subData = await subResponse.json();
                 setSubscription(subData);
+
+                // If subscription is active, clear any stored invoice
+                if (subData.status === 'active') {
+                    localStorage.removeItem(STORAGE_KEY);
+                    setPendingInvoice(null);
+                }
             }
 
-            // Fetch pending invoices
+            // Fetch pending invoices from backend
             const invoiceResponse = await fetch('/api/subscriptions/invoices/pending', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -78,7 +97,15 @@ export function PurchasePlan() {
             if (invoiceResponse.ok) {
                 const invoiceData = await invoiceResponse.json();
                 if (invoiceData && invoiceData.invoice_id) {
-                    setPendingInvoice(invoiceData);
+                    const invoice = {
+                        invoice_id: invoiceData.invoice_id,
+                        status: invoiceData.status,
+                        plan: invoiceData.plan,
+                        amount: invoiceData.amount
+                    };
+                    setPendingInvoice(invoice);
+                    // Store in localStorage
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(invoice));
                 }
             }
         } catch (err: any) {
@@ -90,6 +117,12 @@ export function PurchasePlan() {
     };
 
     const handleSelectPlan = async (planName: string) => {
+        // Prevent selection if there's already a pending invoice
+        if (pendingInvoice) {
+            setError('You already have a pending invoice. Please complete the payment before selecting a new plan.');
+            return;
+        }
+
         setApplying(true);
         setError(null);
 
@@ -104,22 +137,38 @@ export function PurchasePlan() {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Failed to apply for plan');
+                const contentType = response.headers.get('content-type');
+                let errorMessage = 'Failed to apply for plan';
+
+                if (contentType && contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                } else {
+                    const errorText = await response.text();
+                    errorMessage = errorText || errorMessage;
+                }
+
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
             const plan = PLANS.find(p => p.name.toLowerCase() === planName.toLowerCase());
 
-            setPendingInvoice({
+            const invoice: Invoice = {
                 invoice_id: data.invoice_id,
                 status: data.status,
                 plan: planName,
                 amount: plan?.price
-            });
+            };
+
+            setPendingInvoice(invoice);
+
+            // Store invoice ID in localStorage
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(invoice));
 
         } catch (err: any) {
-            setError(err.message || 'Failed to apply for plan');
+            console.error('Plan selection error:', err);
+            setError(err.message || 'Failed to apply for plan. Please try again.');
         } finally {
             setApplying(false);
         }
@@ -217,8 +266,8 @@ export function PurchasePlan() {
                             <div
                                 key={plan.name}
                                 className={`relative p-8 border rounded-2xl transition-all hover:shadow-xl ${plan.popular
-                                        ? 'border-primary-500 ring-2 ring-primary-500 ring-opacity-20 bg-primary-50/30'
-                                        : 'border-primary-200 bg-white'
+                                    ? 'border-primary-500 ring-2 ring-primary-500 ring-opacity-20 bg-primary-50/30'
+                                    : 'border-primary-200 bg-white'
                                     }`}
                             >
                                 {plan.popular && (

@@ -34,24 +34,22 @@ public class SubscriptionService {
 
     private final JwtUtil jwtUtil;
 
-    public ResponseEntity<?> applyForSubscription(String authHeader, String subscriptionName)
-    {
-        if(!membershipPlanRepository.existsByName(subscriptionName))
+    public ResponseEntity<?> applyForSubscription(String authHeader, String subscriptionName) {
+        if (!membershipPlanRepository.existsByName(subscriptionName))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
-        if(!validationUtil.findIfMemberExists(authHeader))
-        {
+        if (!validationUtil.findIfMemberExists(authHeader)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
 
         String email = validationUtil.extractUserEmailFromAuthHeader(authHeader);
 
         MemberModel member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Member with email " + email + " not found."));
 
-        if(member.getSubscriptions() != null && !member.getSubscriptions().getStatus().equals("canceled"))
-            return ResponseEntity.status(404).body("You already have a " + member.getSubscriptions().getStatus() + " subscription.");
+        if (member.getSubscriptions() != null && !member.getSubscriptions().getStatus().equals("canceled"))
+            return ResponseEntity.status(404)
+                    .body("You already have a " + member.getSubscriptions().getStatus() + " subscription.");
 
         MembershipPlanModel plan = membershipPlanRepository.findByName(subscriptionName)
                 .orElseThrow(() -> new RuntimeException("Membership Plan Not Found"));
@@ -73,30 +71,26 @@ public class SubscriptionService {
 
         member.setSubscriptions(subscription);
 
-
         memberRepository.save(member);
         subscriptionRepository.save(subscription);
         invoiceRepository.save(invoice);
 
-        return ResponseEntity.ok().body( Map.of(
-                "paymentId", invoice.getInvoiceId(),
-                "status", "pending"
-                )
+        return ResponseEntity.ok().body(Map.of(
+                "invoice_id", invoice.getInvoiceId().toString(),
+                "status", "pending")
 
         );
     }
 
-    public ResponseEntity<?> paymentForSubscription(String authHeader, PaymentRequest paymentRequest)
-    {
-        if (!validationUtil.findIfMemberExists(authHeader))
-        {
+    public ResponseEntity<?> paymentForSubscription(String authHeader, PaymentRequest paymentRequest) {
+        if (!validationUtil.findIfMemberExists(authHeader)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
 
         InvoiceModel invoice = invoiceRepository.findById(paymentRequest.getPaymentId())
                 .orElseThrow(() -> new RuntimeException("Invoice with not found."));
 
-        if( paymentRequest.getAmountPaid().compareTo(invoice.getAmount()) < 0 )
+        if (paymentRequest.getAmountPaid().compareTo(invoice.getAmount()) < 0)
             throw new RuntimeException("Insufficient funds");
 
         PaymentModel payment = PaymentModel.builder()
@@ -112,36 +106,32 @@ public class SubscriptionService {
         paymentRepository.save(payment);
         invoiceRepository.save(invoice);
 
-        return ResponseEntity.ok().body( Map.of(
-                "message", "payment is in processing"
-        ));
+        return ResponseEntity.ok().body(Map.of(
+                "message", "payment is in processing"));
 
     }
 
-    public ResponseEntity<?> seeSubsciptionDetail(String authHeader)
-    {
-        if (!validationUtil.findIfMemberExists(authHeader))
-        {
+    public ResponseEntity<?> seeSubsciptionDetail(String authHeader) {
+        if (!validationUtil.findIfMemberExists(authHeader)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
 
-        MemberModel memberModel = memberRepository.findByEmail(validationUtil.extractUserEmailFromAuthHeader(authHeader))
+        MemberModel memberModel = memberRepository
+                .findByEmail(validationUtil.extractUserEmailFromAuthHeader(authHeader))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
 
         SubscriptionModel subscriptionModel = memberModel.getSubscriptions();
-        Map<String,Object> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
 
-        if(subscriptionModel == null)
-            return ResponseEntity.ok().body( Map.of(
-                    "message", "Subscription Not Found"
-            ));
+        if (subscriptionModel == null)
+            return ResponseEntity.ok().body(Map.of(
+                    "message", "Subscription Not Found"));
         else {
             return ResponseEntity.ok().body(Map.of(
                     "currentPlan", subscriptionModel.getPlan().getName(),
                     "startDate", subscriptionModel.getStartDate(),
                     "endDate", subscriptionModel.getEndDate(),
-                    "status", subscriptionModel.getStatus()
-            ));
+                    "status", subscriptionModel.getStatus()));
         }
 
     }

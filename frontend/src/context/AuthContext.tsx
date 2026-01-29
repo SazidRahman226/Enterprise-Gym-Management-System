@@ -116,7 +116,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
 
             if (!response.ok) {
-                throw new Error('Registration failed. Email might be already in use.');
+                let errorMessage = 'Registration failed. Please check if your email or phone number is already registered.';
+                try {
+                    const errorText = await response.text();
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        if (errorJson.message) errorMessage = errorJson.message;
+                        else if (errorJson.error) errorMessage = errorJson.error;
+                    } catch {
+                        if (errorText) errorMessage = errorText;
+                    }
+                } catch (e) {
+                }
+                throw new Error(errorMessage);
             }
 
             const resData = await response.json();
@@ -150,7 +162,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
 
             if (!response.ok) {
-                throw new Error('Registration failed. Email might be already in use.');
+                let errorMessage = 'Registration failed. Please check if your email is already registered.';
+                try {
+                    const errorText = await response.text();
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        if (errorJson.message) errorMessage = errorJson.message;
+                        else if (errorJson.error) errorMessage = errorJson.error;
+                    } catch {
+                        if (errorText) errorMessage = errorText;
+                    }
+                } catch (e) {
+                }
+                throw new Error(errorMessage);
             }
 
             const resData = await response.json();

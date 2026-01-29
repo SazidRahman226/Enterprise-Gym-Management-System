@@ -18,8 +18,11 @@ import java.util.UUID;
 @Repository
 public interface MemberRepository extends JpaRepository<MemberModel, UUID> {
     Optional<MemberModel> findByEmail(String email);
+
     Optional<MemberModel> findByMemberId(UUID uuid);
+
     List<MemberModel> findByCurrentStatus(String status);
+
     Boolean existsByEmailAndCurrentStatus(String email, String status);
 
     // For "Churn Risk": Find active members with no attendance in X days
