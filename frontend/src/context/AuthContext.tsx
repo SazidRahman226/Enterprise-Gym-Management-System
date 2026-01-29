@@ -134,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const resData = await response.json();
             const token = resData.token;
             localStorage.setItem('token', token);
+            localStorage.removeItem('pending_invoice'); // Clear stale invoices
 
             const user: User = {
                 email: data.email,
@@ -238,6 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('pending_invoice');
     };
 
     return (

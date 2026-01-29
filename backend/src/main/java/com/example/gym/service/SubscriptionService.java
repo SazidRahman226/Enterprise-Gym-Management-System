@@ -9,16 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -121,18 +116,41 @@ public class SubscriptionService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
 
         SubscriptionModel subscriptionModel = memberModel.getSubscriptions();
-        Map<String, Object> map = new HashMap<>();
 
         if (subscriptionModel == null)
             return ResponseEntity.ok().body(Map.of(
+                    "status", "inactive",
                     "message", "Subscription Not Found"));
         else {
             return ResponseEntity.ok().body(Map.of(
-                    "currentPlan", subscriptionModel.getPlan().getName(),
+                    "plan", subscriptionModel.getPlan().getName(),
                     "startDate", subscriptionModel.getStartDate(),
-                    "endDate", subscriptionModel.getEndDate(),
+                    "expiresAt", subscriptionModel.getEndDate(),
                     "status", subscriptionModel.getStatus()));
         }
 
+    }
+
+    public ResponseEntity<?> getPendingInvoices(String authHeader) {
+        if (!validationUtil.findIfMemberExists(authHeader)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        String email = validationUtil.extractUserEmailFromAuthHeader(authHeader);
+        MemberModel member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+
+        List<InvoiceModel> invoices = invoiceRepository.findUnpaidInvoicesByMember(member.getMemberId());
+
+        if (invoices.isEmpty()) {
+            return ResponseEntity.ok().body(Map.of());
+        }
+
+        InvoiceModel invoice = invoices.get(0);
+        return ResponseEntity.ok().body(Map.of(
+                "invoice_id", invoice.getInvoiceId(),
+                "status", invoice.getStatus(),
+                "plan", invoice.getSubscription().getPlan().getName(),
+                "amount", invoice.getAmount()));
     }
 }

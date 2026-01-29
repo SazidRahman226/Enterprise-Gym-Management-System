@@ -13,9 +13,10 @@ import java.util.UUID;
 @Repository
 public interface InvoiceRepository extends JpaRepository<InvoiceModel, UUID> {
     // Find unpaid invoices for a specific member
-    @Query("SELECT i FROM InvoiceModel i JOIN i.subscription s WHERE s.member.memberId = :memberId AND i.status = 'Unpaid'")
-    List<InvoiceModel> findUnpaidInvoicesByMember(@Param("memberId") Long memberId);
+    @Query("SELECT i FROM InvoiceModel i JOIN i.subscription s WHERE s.member.memberId = :memberId AND i.status = 'pending'")
+    List<InvoiceModel> findUnpaidInvoicesByMember(@Param("memberId") UUID memberId);
 
     Optional<InvoiceModel> findByInvoiceId(UUID invoiceId);
+
     Boolean existsByInvoiceId(UUID invoiceId);
 }

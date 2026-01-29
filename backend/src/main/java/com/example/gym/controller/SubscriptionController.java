@@ -16,23 +16,24 @@ public class SubscriptionController {
     @PostMapping("/apply")
     public ResponseEntity<?> applyForSubscription(
             @RequestHeader("Authorization") String authHeader,
-            @RequestParam("plan") String planName
-    ) {
+            @RequestParam("plan") String planName) {
         return subscriptionService.applyForSubscription(authHeader, planName);
     }
 
     @PostMapping("/pay")
     public ResponseEntity<?> makePayment(
             @RequestHeader("Authorization") String authHeader,
-            @RequestBody PaymentRequest paymentRequest
-    ) {
+            @RequestBody PaymentRequest paymentRequest) {
         return subscriptionService.paymentForSubscription(authHeader, paymentRequest);
     }
 
-    @PostMapping("/subscription")
-    public ResponseEntity<?> subscribeToSubscription(@RequestHeader("Authorization")  String authHeader) {
+    @GetMapping("/current")
+    public ResponseEntity<?> getCurrentSubscription(@RequestHeader("Authorization") String authHeader) {
         return subscriptionService.seeSubsciptionDetail(authHeader);
     }
 
-
+    @GetMapping("/invoices/pending")
+    public ResponseEntity<?> getPendingInvoices(@RequestHeader("Authorization") String authHeader) {
+        return subscriptionService.getPendingInvoices(authHeader);
+    }
 }
