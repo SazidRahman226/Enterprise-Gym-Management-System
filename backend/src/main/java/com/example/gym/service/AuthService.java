@@ -206,13 +206,15 @@ public class AuthService {
         String role = staffModel.getRole();
         String description = staffModel.getTrainerProfile().getShortDescription();
         String specialization = staffModel.getTrainerProfile().getSpecialization();
+        String status = staffModel.getTrainerProfile().getStatus();
 
         return ResponseEntity.ok(Map.of(
                 "username", username,
                 "email", staffEmail,
                 "role", role,
                 "description", description,
-                "specialization", specialization
+                "specialization", specialization,
+                "status", status
         ));
 
     }

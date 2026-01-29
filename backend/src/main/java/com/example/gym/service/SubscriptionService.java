@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -49,8 +50,8 @@ public class SubscriptionService {
         MemberModel member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Member with email " + email + " not found."));
 
-        if(!member.getSubscriptions().getStatus().equals("canceled"))
-            throw new RuntimeException("current subscription status is still " + member.getSubscriptions().getStatus());
+        if(member.getSubscriptions() != null && !member.getSubscriptions().getStatus().equals("canceled"))
+            return ResponseEntity.status(404).body("You already have a " + member.getSubscriptions().getStatus() + " subscription.");
 
         MembershipPlanModel plan = membershipPlanRepository.findByName(subscriptionName)
                 .orElseThrow(() -> new RuntimeException("Membership Plan Not Found"));
@@ -78,7 +79,7 @@ public class SubscriptionService {
         invoiceRepository.save(invoice);
 
         return ResponseEntity.ok().body( Map.of(
-                "invoice_id", invoice.getInvoiceId(),
+                "paymentId", invoice.getInvoiceId(),
                 "status", "pending"
                 )
 
@@ -114,6 +115,34 @@ public class SubscriptionService {
         return ResponseEntity.ok().body( Map.of(
                 "message", "payment is in processing"
         ));
+
+    }
+
+    public ResponseEntity<?> seeSubsciptionDetail(String authHeader)
+    {
+        if (!validationUtil.findIfMemberExists(authHeader))
+        {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        MemberModel memberModel = memberRepository.findByEmail(validationUtil.extractUserEmailFromAuthHeader(authHeader))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
+
+        SubscriptionModel subscriptionModel = memberModel.getSubscriptions();
+        Map<String,Object> map = new HashMap<>();
+
+        if(subscriptionModel == null)
+            return ResponseEntity.ok().body( Map.of(
+                    "message", "Subscription Not Found"
+            ));
+        else {
+            return ResponseEntity.ok().body(Map.of(
+                    "currentPlan", subscriptionModel.getPlan().getName(),
+                    "startDate", subscriptionModel.getStartDate(),
+                    "endDate", subscriptionModel.getEndDate(),
+                    "status", subscriptionModel.getStatus()
+            ));
+        }
 
     }
 }

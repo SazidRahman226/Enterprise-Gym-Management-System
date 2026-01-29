@@ -28,4 +28,11 @@ public class SubscriptionController {
     ) {
         return subscriptionService.paymentForSubscription(authHeader, paymentRequest);
     }
+
+    @PostMapping("/subscription")
+    public ResponseEntity<?> subscribeToSubscription(@RequestHeader("Authorization")  String authHeader) {
+        return subscriptionService.seeSubsciptionDetail(authHeader);
+    }
+
+
 }
