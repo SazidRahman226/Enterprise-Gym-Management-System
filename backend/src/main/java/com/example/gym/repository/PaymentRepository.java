@@ -8,9 +8,10 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface PaymentRepository extends JpaRepository<PaymentModel, Long> {
+public interface PaymentRepository extends JpaRepository<PaymentModel, UUID> {
     List<PaymentModel> findByInvoiceInvoiceId(Long invoiceId);
 
     @Query("SELECT SUM(p.amountPaid) FROM PaymentModel p WHERE p.paymentDate BETWEEN :startDate AND :endDate")

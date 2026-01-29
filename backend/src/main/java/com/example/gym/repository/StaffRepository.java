@@ -6,10 +6,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface StaffRepository extends JpaRepository<StaffModel, Long> {
+public interface StaffRepository extends JpaRepository<StaffModel, UUID> {
     List<StaffModel> findByRole(String role);
     Optional<StaffModel> findByEmail(String email);
-    Boolean existsByEmailAndCurrentRole(String email, String role);
+    Boolean existsByEmailAndRole(String email, String role);
 }

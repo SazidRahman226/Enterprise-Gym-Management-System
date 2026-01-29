@@ -5,8 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface MembershipPlanRepository extends JpaRepository<MembershipPlanModel, Long> {
-    List<MembershipPlanModel> findByName(String name);
+public interface MembershipPlanRepository extends JpaRepository<MembershipPlanModel, UUID> {
+    Optional<MembershipPlanModel> findByName(String name);
+    Boolean existsByName(String name);
 }

@@ -5,9 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface UserCredentialRepository extends JpaRepository<UserCredentialModel, Long> {
+public interface UserCredentialRepository extends JpaRepository<UserCredentialModel, UUID> {
     Optional<UserCredentialModel> findByUserEmail(String userEmail);
-    Boolean existsByEmailAndCurrentRole(String email, String role);
+    Boolean existsByUserEmailAndUserType(String email, String role);
 }

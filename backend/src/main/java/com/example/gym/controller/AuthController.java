@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 
 public class AuthController {
 
@@ -51,10 +51,18 @@ public class AuthController {
 //    }
 
     //getting user information
-    @GetMapping("/userdetails")
+    @GetMapping("/member-details")
     public ResponseEntity<?> getUserDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
 
-        return authService.getUserdetails(authHeader); //Get user information
+        return authService.getMemberDetails(authHeader); //Get user information
 
     }
+
+    @GetMapping("/trainer-details")
+    public ResponseEntity<?> getTrainerDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+
+        return authService.getTrainerDetails(authHeader); //Get user information
+
+    }
+
 }

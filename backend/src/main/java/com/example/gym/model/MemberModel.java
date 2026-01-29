@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "members", indexes = {
+@Table(indexes = {
         @Index(name = "idx_member_email", columnList = "email", unique = true)
 })
 public class MemberModel {
@@ -42,8 +43,8 @@ public class MemberModel {
     @Column(nullable = false)
     private String currentStatus; // active, expired, banned, pending
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<SubscriptionModel> subscriptions;
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private SubscriptionModel subscriptions;
 
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
     private List<ClassBookingModel> bookings;

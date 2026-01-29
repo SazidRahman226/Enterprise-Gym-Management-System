@@ -7,10 +7,15 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface InvoiceRepository extends JpaRepository<InvoiceModel, Long> {
+public interface InvoiceRepository extends JpaRepository<InvoiceModel, UUID> {
     // Find unpaid invoices for a specific member
     @Query("SELECT i FROM InvoiceModel i JOIN i.subscription s WHERE s.member.memberId = :memberId AND i.status = 'Unpaid'")
     List<InvoiceModel> findUnpaidInvoicesByMember(@Param("memberId") Long memberId);
+
+    Optional<InvoiceModel> findByInvoiceId(UUID invoiceId);
+    Boolean existsByInvoiceId(UUID invoiceId);
 }

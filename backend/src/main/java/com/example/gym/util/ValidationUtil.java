@@ -34,14 +34,14 @@ public class ValidationUtil {
     public Boolean validateUserAuthorization(String authHeader, String role) {
 
         String email = extractUserEmailFromAuthHeader(authHeader);
-        return userCredentialRepository.existsByEmailAndCurrentRole(email, role);
+        return userCredentialRepository.existsByUserEmailAndUserType(email, role);
     }
 
     //validates if the token is of staff member with a desired role
     public Boolean validateStaffAuthorization(String authHeader, String role) {
 
         String email = extractUserEmailFromAuthHeader(authHeader);
-        return staffRepository.existsByEmailAndCurrentRole(email, role);
+        return staffRepository.existsByEmailAndRole(email, role);
     }
 
 

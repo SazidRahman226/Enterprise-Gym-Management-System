@@ -8,9 +8,10 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface SubscriptionRepository extends JpaRepository<SubscriptionModel, Long> {
+public interface SubscriptionRepository extends JpaRepository<SubscriptionModel, UUID> {
 
     List<SubscriptionModel> findByMemberMemberIdAndStatus(Long memberId, String status);
 

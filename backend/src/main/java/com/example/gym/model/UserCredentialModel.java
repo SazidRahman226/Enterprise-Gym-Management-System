@@ -12,7 +12,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "user_credentials")
 public class UserCredentialModel {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

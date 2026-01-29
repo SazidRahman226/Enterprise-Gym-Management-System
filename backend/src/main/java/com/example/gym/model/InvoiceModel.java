@@ -1,16 +1,15 @@
 package com.example.gym.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -33,6 +32,7 @@ public class InvoiceModel {
     @Column(nullable = false)
     private String status; // paid, unpaid, overdue
 
-    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL)
-    private List<PaymentModel> payments;
+    @OneToOne(mappedBy = "invoice", cascade = CascadeType.ALL)
+    private PaymentModel payments;
+
 }

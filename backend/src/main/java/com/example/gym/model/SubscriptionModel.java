@@ -1,15 +1,15 @@
 package com.example.gym.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -36,13 +36,7 @@ public class SubscriptionModel {
     @Column(nullable = false)
     private String status; // active, pending, canceled
 
-    @OneToMany(cascade = CascadeType.ALL)
-    private List<InvoiceModel> invoices;
+    @OneToOne(mappedBy = "subscription", cascade = CascadeType.ALL)
+    private InvoiceModel invoice;
 
-    @PrePersist
-    public void prePersist()
-    {
-        this.startDate = LocalDate.now();
-        this.endDate = LocalDate.now().plusDays(this.plan.getDurationDays());
-    }
 }

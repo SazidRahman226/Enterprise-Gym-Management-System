@@ -1,14 +1,13 @@
 package com.example.gym.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -19,7 +18,7 @@ public class MembershipPlanModel {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID planId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name; // gold, silver, platinum
 
     @Column(nullable = false)

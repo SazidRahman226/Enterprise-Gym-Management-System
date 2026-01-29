@@ -23,7 +23,7 @@ public class MembershipPlanConfig {
 
             // 2. Create "Silver" Plan (Monthly, no discount)
             MembershipPlanModel silver = MembershipPlanModel.builder()
-                    .name("Silver")
+                    .name("silver")
                     .durationDays(30)
                     .baseFee(new BigDecimal("50.00"))       // $50
                     .discountedFee(new BigDecimal("50.00")) // No discount
@@ -31,7 +31,7 @@ public class MembershipPlanConfig {
 
             // 3. Create "Gold" Plan (Quarterly, slight discount)
             MembershipPlanModel gold = MembershipPlanModel.builder()
-                    .name("Gold")
+                    .name("gold")
                     .durationDays(90)
                     .baseFee(new BigDecimal("150.00"))      // $150 value
                     .discountedFee(new BigDecimal("130.00")) // $20 off
@@ -39,7 +39,7 @@ public class MembershipPlanConfig {
 
             // 4. Create "Platinum" Plan (Yearly, big discount)
             MembershipPlanModel platinum = MembershipPlanModel.builder()
-                    .name("Platinum")
+                    .name("platinum")
                     .durationDays(365)
                     .baseFee(new BigDecimal("600.00"))      // $600 value
                     .discountedFee(new BigDecimal("450.00")) // $150 off!

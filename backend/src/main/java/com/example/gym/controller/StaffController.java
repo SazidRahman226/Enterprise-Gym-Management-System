@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/admin")
+@RequestMapping("/api/admin")
 
 public class StaffController {
 

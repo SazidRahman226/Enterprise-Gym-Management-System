@@ -1,23 +1,31 @@
 package com.example.gym.controller;
 
-import com.example.gym.model.MemberModel;
+import com.example.gym.config.PaymentRequest;
 import com.example.gym.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api/subscriptions")
 @RequiredArgsConstructor
-@RequestMapping("/subscribe")
-
 public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
 
-    @PostMapping("/gold")
+    @PostMapping("/apply")
+    public ResponseEntity<?> applyForSubscription(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam("plan") String planName
+    ) {
+        return subscriptionService.applyForSubscription(authHeader, planName);
+    }
 
-
-
-
+    @PostMapping("/pay")
+    public ResponseEntity<?> makePayment(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody PaymentRequest paymentRequest
+    ) {
+        return subscriptionService.paymentForSubscription(authHeader, paymentRequest);
+    }
 }

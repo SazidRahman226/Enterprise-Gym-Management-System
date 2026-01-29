@@ -79,7 +79,7 @@ public class AuthService {
 
         UserCredentialModel user = UserCredentialModel.builder()
                 .userEmail(trainer.getEmail())
-                .userType("trainer")
+                .userType("staff")
                 .passwordHash(hashedPassword)
                 .build();
 
@@ -165,7 +165,7 @@ public class AuthService {
         ));
     }
 
-    public ResponseEntity<?> getUserdetails(String authHeader)
+    public ResponseEntity<?> getMemberDetails(String authHeader)
     {
 
         String userEmail = validationUtil.extractUserEmailFromAuthHeader(authHeader);
@@ -187,6 +187,32 @@ public class AuthService {
                 "phone", phone,
                 "emergency-contact", emergencyContact,
                 "current-status", currentStatus
+        ));
+
+    }
+
+    public ResponseEntity<?> getTrainerDetails(String authHeader)
+    {
+
+        String staffEmail = validationUtil.extractUserEmailFromAuthHeader(authHeader);
+
+        StaffModel staffModel = staffRepository.findByEmail(staffEmail)
+                .orElseThrow(() -> new RuntimeException("User details not found"));
+
+        if(staffModel.getTrainerProfile() == null)
+            throw new RuntimeException("Unable to find trainer profile ");
+
+        String username = staffModel.getFirstName() + " " + staffModel.getLastName();
+        String role = staffModel.getRole();
+        String description = staffModel.getTrainerProfile().getShortDescription();
+        String specialization = staffModel.getTrainerProfile().getSpecialization();
+
+        return ResponseEntity.ok(Map.of(
+                "username", username,
+                "email", staffEmail,
+                "role", role,
+                "description", description,
+                "specialization", specialization
         ));
 
     }
