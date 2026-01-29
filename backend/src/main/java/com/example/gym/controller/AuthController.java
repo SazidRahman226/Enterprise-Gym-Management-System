@@ -1,7 +1,7 @@
 package com.example.gym.controller;
 
 import com.example.gym.dto.LoginRequest;
-import com.example.gym.dto.RegisterRequest;
+import com.example.gym.dto.MemberRegisterRequest;
 import com.example.gym.dto.UserDetailsRequest;
 import com.example.gym.service.MemberService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class MemberController {
 
     //register new users
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest member) {
+    public ResponseEntity<?> register(@RequestBody MemberRegisterRequest member) {
 
         return memberService.register(member); //Initial registration just using email and password
 
@@ -35,13 +35,13 @@ public class MemberController {
 
     }
 
-    //filling up user details
-    @PostMapping("/userdetails")
-    public ResponseEntity<?> userDetails(@RequestBody UserDetailsRequest userDetailsRequest, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
-
-        return memberService.createUserDetails(userDetailsRequest, authHeader); //Giving user detailed info
-
-    }
+//    //filling up user details
+//    @PostMapping("/userdetails")
+//    public ResponseEntity<?> userDetails(@RequestBody UserDetailsRequest userDetailsRequest, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+//
+//        return memberService.createUserDetails(userDetailsRequest, authHeader); //Giving user detailed info
+//
+//    }
 
     //getting user information
     @GetMapping("/userdetails")

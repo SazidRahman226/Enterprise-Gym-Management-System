@@ -1,10 +1,12 @@
 package com.example.gym.service;
 import com.example.gym.dto.LoginRequest;
-import com.example.gym.dto.RegisterRequest;
+import com.example.gym.dto.MemberRegisterRequest;
 import com.example.gym.dto.UserDetailsRequest;
 import com.example.gym.model.MemberModel;
+import com.example.gym.model.StaffModel;
 import com.example.gym.model.UserCredentialModel;
 import com.example.gym.repository.MemberRepository;
+import com.example.gym.repository.StaffRepository;
 import com.example.gym.repository.UserCredentialRepository;
 import com.example.gym.security.JwtUtil;
 import com.example.gym.util.ValidationUtil;
@@ -14,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.SQLOutput;
 import java.time.LocalDate;
 import java.util.Map;
 
@@ -27,8 +28,9 @@ public class MemberService {
     private final JwtUtil jwtUtil;
     private final MemberRepository memberRepository;
     private final ValidationUtil validationUtil;
+    private final StaffRepository staffRepository;
 
-    public ResponseEntity<?> register(@RequestBody RegisterRequest member) {
+    public ResponseEntity<?> register(@RequestBody MemberRegisterRequest member) {
 
         if(userCredentialRepository.findByUserEmail(member.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().build();
@@ -42,8 +44,19 @@ public class MemberService {
                 .passwordHash(hashedPassword)
                 .build();
 
+        MemberModel memberModel = MemberModel.builder()
+                .firstName(member.getFirstName())
+                .lastName(member.getLastName())
+                .email(member.getEmail())
+                .phone(member.getPhone())
+                .emergencyContact(member.getEmergencyContact())
+                .dob(member.getDob())
+                .currentStatus("pending")
+                .build();
 
         userCredentialRepository.save(user);
+        memberRepository.save(memberModel);
+
         String token = jwtUtil.generateToken(user.getUserEmail());
 
         return ResponseEntity.ok(Map.of(
@@ -66,12 +79,24 @@ public class MemberService {
 
         String token = jwtUtil.generateToken(_user.getUserEmail());
 
+        String role = "";
+
+        if(_user.getUserType().equals("member")) {
+            role = "member";
+        } else if(_user.getUserType().equals("staff")) {
+
+            StaffModel staff = staffRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new RuntimeException("Access denied!"));
+
+            role = staff.getRole();
+        }
+
         return ResponseEntity.ok(Map.of(
                 "token", token,
-                "user", Map.of(
-                        "email", _user.getUserEmail()
+                "email", _user.getUserEmail(),
+                "role", role
                 )
-        ));
+        );
     }
 
     public ResponseEntity<?> createUserDetails(@RequestBody UserDetailsRequest userDetailsRequest, String authHeader)
