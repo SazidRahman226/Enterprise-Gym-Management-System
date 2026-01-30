@@ -104,9 +104,14 @@ export function PurchasePlan() {
                         amount: invoiceData.amount
                     };
                     setPendingInvoice(invoice);
-                    // Store in localStorage
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(invoice));
+                } else {
+                    setPendingInvoice(null);
+                    localStorage.removeItem(STORAGE_KEY);
                 }
+            } else {
+                setPendingInvoice(null);
+                localStorage.removeItem(STORAGE_KEY);
             }
         } catch (err: any) {
             console.error('Failed to fetch subscription status:', err);
@@ -214,11 +219,12 @@ export function PurchasePlan() {
             setProcessingMessage(data.message || "Payment is in processing");
             setIsProcessingModalOpen(true);
 
+            // Immediately update local state for better UX
+            setPendingInvoice(null);
+            localStorage.removeItem(STORAGE_KEY);
+
             // Re-fetch status to update UI (this will clear invoice and show active plan)
             await fetchSubscriptionStatus();
-
-            // Clear local storage pending invoice
-            localStorage.removeItem(STORAGE_KEY);
 
         } catch (err: any) {
             console.error('Payment error:', err);
