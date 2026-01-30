@@ -79,7 +79,7 @@ export function LandingPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {[
                             { name: "Alex Rivera", spec: "CrossFit Expert", img: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
-                            { name: "Sarah Chen", spec: "Yoga & Pilates", img: "https://images.unsplash.com/photo-1544367563-12123d8965cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
+                            { name: "Sarah Chen", spec: "Yoga & Pilates", img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
                             { name: "Mike Tyson", spec: "Boxing", img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
                             { name: "Jessica Jo", spec: "Strength Coach", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" }
                         ].map((trainer, i) => (

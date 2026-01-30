@@ -20,7 +20,7 @@ public class SubscriptionModel {
     private UUID subId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id" ,nullable = false)
+    @JoinColumn(name = "member_id", nullable = false)
     private MemberModel member;
 
     @ManyToOne(fetch = FetchType.LAZY)
