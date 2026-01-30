@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
-import { Check, CreditCard, AlertCircle, Loader2, CheckCircle } from "lucide-react";
+import { Check, CreditCard, AlertCircle, Loader2, CheckCircle, X } from "lucide-react";
 
 interface Plan {
     name: string;
@@ -50,7 +49,8 @@ export function PurchasePlan() {
     const [loading, setLoading] = useState(true);
     const [applying, setApplying] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate();
+    const [processingMessage, setProcessingMessage] = useState<string | null>(null);
+    const [isProcessingModalOpen, setIsProcessingModalOpen] = useState(false);
 
     useEffect(() => {
         fetchSubscriptionStatus();
@@ -174,15 +174,57 @@ export function PurchasePlan() {
         }
     };
 
-    const handlePayNow = () => {
-        if (pendingInvoice) {
-            navigate(`/dashboard/member/payment/${pendingInvoice.invoice_id}`, {
-                state: {
-                    invoiceId: pendingInvoice.invoice_id,
-                    plan: pendingInvoice.plan,
-                    amount: pendingInvoice.amount
-                }
+    const handlePayNow = async () => {
+        if (!pendingInvoice) return;
+
+        setApplying(true);
+        setError(null);
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/subscriptions/pay', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    paymentId: pendingInvoice.invoice_id,
+                    amountPaid: pendingInvoice.amount,
+                    paymentMethod: "Bkash",
+                    transactionRef: "sd"
+                })
             });
+
+            if (!response.ok) {
+                let errorMessage = 'Payment failed';
+                const errorText = await response.text().catch(() => '');
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    errorMessage = errorText || errorMessage;
+                }
+                throw new Error(errorMessage);
+            }
+
+            const data = await response.json();
+
+            // Show processing modal
+            setProcessingMessage(data.message || "Payment is in processing");
+            setIsProcessingModalOpen(true);
+
+            // Re-fetch status to update UI (this will clear invoice and show active plan)
+            await fetchSubscriptionStatus();
+
+            // Clear local storage pending invoice
+            localStorage.removeItem(STORAGE_KEY);
+
+        } catch (err: any) {
+            console.error('Payment error:', err);
+            setError(err.message || 'Failed to process payment. Please try again.');
+        } finally {
+            setApplying(false);
         }
     };
 
@@ -307,6 +349,37 @@ export function PurchasePlan() {
                                 </Button>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+            {/* Processing Modal */}
+            {isProcessingModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary-950/40 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-primary-100 animate-in zoom-in-95 font-sans relative">
+                        <button
+                            onClick={() => setIsProcessingModalOpen(false)}
+                            className="absolute top-4 right-4 text-primary-400 hover:text-primary-600 transition-colors"
+                        >
+                            <X className="h-6 w-6" />
+                        </button>
+
+                        <div className="flex flex-col items-center text-center">
+                            <div className="h-20 w-20 bg-green-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                                <CheckCircle className="h-10 w-10 text-green-500" />
+                            </div>
+
+                            <h3 className="text-2xl font-bold text-primary-950 mb-2">Request Received</h3>
+                            <p className="text-primary-600 mb-8 leading-relaxed">
+                                {processingMessage}
+                            </p>
+
+                            <Button
+                                onClick={() => setIsProcessingModalOpen(false)}
+                                className="w-full py-6 rounded-2xl text-lg font-bold shadow-lg shadow-primary-200"
+                            >
+                                Got it
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}

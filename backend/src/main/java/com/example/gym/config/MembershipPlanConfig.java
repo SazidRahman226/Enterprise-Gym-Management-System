@@ -21,28 +21,28 @@ public class MembershipPlanConfig {
                 return;
             }
 
-            // 2. Create "Silver" Plan (Monthly, no discount)
+            // 2. Create "Silver" Plan
             MembershipPlanModel silver = MembershipPlanModel.builder()
-                    .name("silver")
+                    .name("Silver")
                     .durationDays(30)
-                    .baseFee(new BigDecimal("50.00"))       // $50
-                    .discountedFee(new BigDecimal("50.00")) // No discount
+                    .baseFee(new BigDecimal("35.00"))
+                    .discountedFee(new BigDecimal("29.00"))
                     .build();
 
-            // 3. Create "Gold" Plan (Quarterly, slight discount)
+            // 3. Create "Gold" Plan
             MembershipPlanModel gold = MembershipPlanModel.builder()
-                    .name("gold")
+                    .name("Gold")
                     .durationDays(90)
-                    .baseFee(new BigDecimal("150.00"))      // $150 value
-                    .discountedFee(new BigDecimal("130.00")) // $20 off
+                    .baseFee(new BigDecimal("75.00"))
+                    .discountedFee(new BigDecimal("59.00"))
                     .build();
 
-            // 4. Create "Platinum" Plan (Yearly, big discount)
+            // 4. Create "Platinum" Plan
             MembershipPlanModel platinum = MembershipPlanModel.builder()
-                    .name("platinum")
+                    .name("Platinum")
                     .durationDays(365)
-                    .baseFee(new BigDecimal("600.00"))      // $600 value
-                    .discountedFee(new BigDecimal("450.00")) // $150 off!
+                    .baseFee(new BigDecimal("150.00"))
+                    .discountedFee(new BigDecimal("99.00"))
                     .build();
 
             // 5. Save all to database

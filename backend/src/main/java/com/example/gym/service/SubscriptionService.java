@@ -30,8 +30,12 @@ public class SubscriptionService {
     private final JwtUtil jwtUtil;
 
     public ResponseEntity<?> applyForSubscription(String authHeader, String subscriptionName) {
-        if (!membershipPlanRepository.existsByName(subscriptionName))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        if (!membershipPlanRepository.existsByName(subscriptionName) &&
+                !membershipPlanRepository.existsByName(subscriptionName.toLowerCase()) &&
+                !membershipPlanRepository.existsByName(
+                        subscriptionName.substring(0, 1).toUpperCase() + subscriptionName.substring(1).toLowerCase())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Plan not found: " + subscriptionName);
+        }
 
         if (!validationUtil.findIfMemberExists(authHeader)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -40,14 +44,18 @@ public class SubscriptionService {
         String email = validationUtil.extractUserEmailFromAuthHeader(authHeader);
 
         MemberModel member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Member with email " + email + " not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found."));
 
         if (member.getSubscriptions() != null && !member.getSubscriptions().getStatus().equals("canceled"))
-            return ResponseEntity.status(404)
-                    .body("You already have a " + member.getSubscriptions().getStatus() + " subscription.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("You already have an " + member.getSubscriptions().getStatus() + " subscription.");
 
+        // Try exact, then capitalized, then lowercase
         MembershipPlanModel plan = membershipPlanRepository.findByName(subscriptionName)
-                .orElseThrow(() -> new RuntimeException("Membership Plan Not Found"));
+                .or(() -> membershipPlanRepository.findByName(
+                        subscriptionName.substring(0, 1).toUpperCase() + subscriptionName.substring(1).toLowerCase()))
+                .or(() -> membershipPlanRepository.findByName(subscriptionName.toLowerCase()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Membership Plan Not Found"));
 
         SubscriptionModel subscription = SubscriptionModel.builder()
                 .plan(plan)
@@ -83,10 +91,10 @@ public class SubscriptionService {
         }
 
         InvoiceModel invoice = invoiceRepository.findById(paymentRequest.getPaymentId())
-                .orElseThrow(() -> new RuntimeException("Invoice with not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invoice not found."));
 
         if (paymentRequest.getAmountPaid().compareTo(invoice.getAmount()) < 0)
-            throw new RuntimeException("Insufficient funds");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient funds");
 
         PaymentModel payment = PaymentModel.builder()
                 .invoice(invoice)
@@ -96,14 +104,20 @@ public class SubscriptionService {
                 .transactionRef(paymentRequest.getTransactionRef())
                 .build();
 
+        // Update invoice status
+        invoice.setStatus("paid");
         invoice.setPayments(payment);
+
+        // Update subscription status
+        SubscriptionModel subscription = invoice.getSubscription();
+        subscription.setStatus("active");
 
         paymentRepository.save(payment);
         invoiceRepository.save(invoice);
+        subscriptionRepository.save(subscription);
 
         return ResponseEntity.ok().body(Map.of(
                 "message", "payment is in processing"));
-
     }
 
     public ResponseEntity<?> seeSubsciptionDetail(String authHeader) {
