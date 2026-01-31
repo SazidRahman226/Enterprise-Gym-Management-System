@@ -8,7 +8,9 @@ import java.util.List;
 
 @Repository
 public interface ClassBookingRepository extends JpaRepository<ClassBookingModel, Long> {
-    List<ClassBookingModel> findByMemberMemberId(Long memberId);
+    List<ClassBookingModel> findByMemberMemberId(java.util.UUID memberId);
+
+    boolean existsByMemberMemberIdAndClassScheduleScheduleId(java.util.UUID memberId, Long scheduleId);
 
     // Count confirmed bookings for a specific class (for capacity check)
     Long countByClassScheduleScheduleIdAndStatus(Long scheduleId, String status);

@@ -16,5 +16,9 @@ public interface AttendanceLogRepository extends JpaRepository<AttendanceLogMode
     // Find check-ins for today
     @Query("SELECT a FROM AttendanceLogModel a WHERE a.checkInTime BETWEEN :startOfDay AND :endOfDay")
     List<AttendanceLogModel> findTodaysCheckIns(@Param("startOfDay") LocalDateTime startOfDay,
-                                                @Param("endOfDay") LocalDateTime endOfDay);
+            @Param("endOfDay") LocalDateTime endOfDay);
+
+    // Find latest open check-in
+    @Query("SELECT a FROM AttendanceLogModel a WHERE a.member.memberId = :memberId AND a.checkOutTime IS NULL ORDER BY a.checkInTime DESC")
+    List<AttendanceLogModel> findActiveCheckIns(@Param("memberId") java.util.UUID memberId);
 }

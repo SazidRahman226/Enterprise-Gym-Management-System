@@ -19,4 +19,7 @@ public interface InvoiceRepository extends JpaRepository<InvoiceModel, UUID> {
     Optional<InvoiceModel> findByInvoiceId(UUID invoiceId);
 
     Boolean existsByInvoiceId(UUID invoiceId);
+
+    @Query("SELECT SUM(i.amount) FROM InvoiceModel i WHERE i.status = 'paid'")
+    Double sumRevenue();
 }

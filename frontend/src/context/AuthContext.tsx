@@ -201,8 +201,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fetchProfile = async () => {
         const token = localStorage.getItem('token');
         if (!token) return null;
+
+        // Determine endpoint based on role. 
+        // We can get role from state or localStorage.
+        let role = user?.role;
+        if (!role) {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                role = JSON.parse(storedUser).role;
+            }
+        }
+
+        let endpoint = '/api/auth/member-details';
+        if (role === 'trainer') {
+            endpoint = '/api/auth/trainer-details';
+        } else if (role === 'admin' || role === 'staff') {
+            // Admin might not have a profile detail endpoint yet, 
+            // but we shouldn't call member-details for them.
+            return null;
+        }
+
         try {
-            const response = await fetch('/api/auth/userdetails', {
+            const response = await fetch(endpoint, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
