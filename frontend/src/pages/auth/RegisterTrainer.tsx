@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
-import { Dumbbell, AlertCircle, Briefcase } from "lucide-react";
+import { AlertCircle, Briefcase } from "lucide-react";
 import type { TrainerRegisterData } from "../../context/AuthContext";
 
 export function RegisterTrainer() {

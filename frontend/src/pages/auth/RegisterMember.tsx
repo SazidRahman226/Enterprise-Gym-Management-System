@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
-import { Dumbbell, AlertCircle, UserPlus } from "lucide-react";
+import { AlertCircle, UserPlus } from "lucide-react";
 import type { MemberRegisterData } from "../../context/AuthContext";
 
 export function RegisterMember() {

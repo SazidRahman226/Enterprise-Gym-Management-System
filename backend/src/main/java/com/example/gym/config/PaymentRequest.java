@@ -6,8 +6,6 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 @Getter
 @Setter
 public class PaymentRequest {

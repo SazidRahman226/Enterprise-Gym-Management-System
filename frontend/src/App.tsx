@@ -10,6 +10,7 @@ import { MemberAttendance } from './pages/member/MemberAttendance';
 import { PurchasePlan } from './pages/member/PurchasePlan';
 import { MemberSchedule } from './pages/member/MemberSchedule';
 import { TrainerOverview } from './pages/trainer/TrainerOverview';
+import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 import { MainLayout } from './components/layout/MainLayout';
@@ -39,6 +40,13 @@ function App() {
       <Route element={<ProtectedRoute allowedRoles={['trainer']} />}>
         <Route path="/dashboard" element={<DashboardLayout role="trainer" />}>
           <Route path="trainer" element={<TrainerOverview />} />
+        </Route>
+      </Route>
+
+      {/* Admin Routes */}
+      <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+        <Route path="/dashboard" element={<DashboardLayout role="admin" />}>
+          <Route path="admin" element={<AdminDashboard />} />
         </Route>
       </Route>
     </Routes>
